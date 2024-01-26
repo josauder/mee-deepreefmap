@@ -4,6 +4,7 @@
 checkpoints/
 
 # Video processing
+src/tmp
 tmp
 *.MP4
 *.mp4

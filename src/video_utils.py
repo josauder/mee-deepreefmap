@@ -30,10 +30,10 @@ def extract_frames_and_gopro_gravity_vector(video_names, timestamps, width, heig
 
     for video_id, (video_name, timestamp) in enumerate(zip(video_names, timestamps)):
         
-        targetpath = tmp_dir + "/" + video_name.split(".")[0].replace(" ", "_").replace("/", "_")
-        os.makedirs(targetpath)
+        targetpath = tmp_dir + "/" + video_name.split("/")[-1].split(".")[0].replace(" ", "_").replace("/", "_")
+        print(targetpath, video_name)
+        os.makedirs(targetpath, exist_ok=True)
         
-
         begin, end = timestamp.split("-")
         ss = ""
         to = ""
@@ -43,11 +43,11 @@ def extract_frames_and_gopro_gravity_vector(video_names, timestamps, width, heig
             to += " -to " + end
         
         # First: cut video
-        os.system("ffmpeg -hide_banner -loglevel error"+ss+" " +to+" -i '"+video_name+"'  -c copy "+tmp_dir+"/"+str(video_id)+".mp4")
+        os.system("ffmpeg -hide_banner -loglevel error"+ss+" " +to+" -y -i '"+video_name+"'  -c copy "+tmp_dir+"/"+str(video_id)+".mp4")
         # Second: scale video to right dimensions
-        os.system("ffmpeg -hide_banner -loglevel error -i "+tmp_dir+"/"+str(video_id)+".mp4 -vf scale="+str(width)+":"+str(height)+" "+tmp_dir+"/"+str(video_id)+"_.mp4")
+        os.system("ffmpeg -hide_banner -loglevel error  -y -i "+tmp_dir+"/"+str(video_id)+".mp4 -vf scale="+str(width)+":"+str(height)+" "+tmp_dir+"/"+str(video_id)+"_.mp4")
         # Third: extract frames
-        os.system("ffmpeg -hide_banner -loglevel error -i "+tmp_dir+"/"+str(video_id)+"_.mp4 -vf fps="+str(fps)+" -qscale:v 2 "+targetpath +"/%07d.jpg")
+        os.system("ffmpeg -hide_banner -loglevel error -y -i "+tmp_dir+"/"+str(video_id)+"_.mp4 -vf fps="+str(fps)+" -qscale:v 2 "+targetpath +"/%07d.jpg")
         num_frames = len(os.listdir(targetpath))
         
         for frame in os.listdir(targetpath):
@@ -71,6 +71,7 @@ def get_gravity_vectors(video, timestamp, number_of_frames):
     length = get_video_length(video)
 
     begin, end = timestamp.split("-")
+    #TODO: timestamp parsing!
     if begin == "begin":
         begin = 0
     if end == "end":
@@ -86,31 +87,40 @@ def get_gravity_vectors(video, timestamp, number_of_frames):
 
 
 
-def render_video(img_list, depths, semantic_segmentation, results_npy, fps, label_to_color, tmp_dir):
+def render_video(img_list, depths, semantic_segmentation, results_npy, fps, class_to_label, label_to_color, tmp_dir):
     """Renders a video from the given images, depths, semantic_segmentation and 2d maps."""
     os.makedirs(tmp_dir + "/render", exist_ok=True)
     
     # For visualization, its nicer when depths are scaled between 0 and 1, and sqrt_scaled
-    depths_ = np.sqrt(depths-np.min(depths))
+    q95 = np.quantile(depths.reshape(-1), 0.95)
+    q5 = np.quantile(depths.reshape(-1), 0.05)
+    depths = np.clip(depths, q5, q95)
+    depths_ = np.sqrt(depths)
     depths_ /= np.max(depths_)
 
-    color_semseg = np.zeros((semantic_segmentation.shape[0], semantic_segmentation.shape[1], 3), dtype=np.uint8)
-    for class_label in np.unique(semantic_segmentation[i].reshape(-1)):
+    color_semseg = np.zeros((semantic_segmentation.shape[0], semantic_segmentation.shape[1], semantic_segmentation.shape[2], 3), dtype=np.uint8)
+    
+    
+    for class_name, class_label in class_to_label.items():
         color_semseg[semantic_segmentation==class_label] = label_to_color[class_label]
 
-    legend = get_legend(label_to_color, tmp_dir)
+    class_to_color = {class_name: label_to_color[class_label] for class_name, class_label in class_to_label.items()}
+    legend = get_legend(class_to_color, tmp_dir)
 
+    final_rgb = results_npy[:,:,1:4]
+    final_class_rgb = results_npy[:,:,6:9]
+    frame_index = results_npy[:,:,-3:-2].astype(np.int16)
     for i in tqdm(range(len(depths))):
         
         rgb = np.array(Image.open(img_list[i]))/255.
         
-
-        results_npy_i = results_npy * (results_npy[:,:,-3]<=i).astype(np.uint8).reshape(results_npy.shape[0], results_npy.shape[1], 1)
-        results_npy_rgb = results_npy_i[:,:,1:4]
-        results_npy_class_rgb = results_npy_i[:,:,6:9]
+        ind = (frame_index <= i).astype(np.uint8)
+        results_npy_rgb = final_rgb * ind
+        results_npy_class_rgb = final_class_rgb * ind
 
 
         if results_npy_rgb.shape[0]<results_npy_rgb.shape[1]:
+            print("axis0")
             results_npy_rgb = np.concatenate([results_npy_rgb,results_npy_class_rgb],axis=0)
         else:
             results_npy_rgb = np.concatenate([results_npy_rgb,results_npy_class_rgb],axis=1)
@@ -121,19 +131,15 @@ def render_video(img_list, depths, semantic_segmentation, results_npy, fps, labe
         results_npy_rgb = np.concatenate([legend, results_npy_rgb/255.], axis=1).transpose(1, 0, 2)
         results_npy_rgb = resize(results_npy_rgb, rgb.shape[:2])
         
-        if results_npy_rgb.shape[0]<results_npy_rgb.shape[1]:
-            resize_ratio = results_npy_rgb.shape[1]/rgb.shape[1]
-            results_npy_rgb = resize(results_npy_rgb, (round(results_npy_rgb.shape[0]/resize_ratio), round(results_npy_rgb.shape[1]/resize_ratio)))
-        else:
-            raise Exception("Not implemented")
-
+        resize_ratio = results_npy_rgb.shape[1]/rgb.shape[1]
+        results_npy_rgb = resize(results_npy_rgb, (round(results_npy_rgb.shape[0]/resize_ratio), round(results_npy_rgb.shape[1]/resize_ratio)))
 
         image = np.concatenate([
             np.concatenate([rgb, 0.2 * rgb + 0.8 * plt.cm.seismic(depths_[i])[:,:,:3]], axis=0),
-            np.concatenate([0.3 * rgb + 0.7 * color_semseg[i], 
+            np.concatenate([0.3 * rgb + 0.7 * color_semseg[i].astype(np.float32)/255., 
                             results_npy_rgb]
                            , axis=0),
         ], axis=1)
         plt.imsave(tmp_dir + "/render/" + str(i).zfill(7)+".jpg", image)
-    os.system("ffmpeg -framerate "+str(fps)+" -pattern_type glob -i '"+tmp_dir+"/render/*.jpg' \
+    os.system("ffmpeg  -hide_banner -loglevel error -framerate "+str(fps)+" -pattern_type glob -i '"+tmp_dir+"/render/*.jpg' \
           -c:v libx264 -pix_fmt yuv420p "+tmp_dir+"/out.mp4")

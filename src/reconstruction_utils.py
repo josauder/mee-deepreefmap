@@ -55,7 +55,7 @@ def map_3d(x, fn, size=0.03):
 def get_matching_indices(arr_a, arr_b):
     tree = cKDTree(arr_b)
     dist, index = tree.query(arr_a, workers=64)
-    return index, dist
+    return index
 
 def get_rotation_matrix_to_align_pose_with_gravity(pose, g):
     """Used to find rotation that rotates pose matrix to align with gravity vector g"""
@@ -138,14 +138,12 @@ def get_legend(class_to_colors, tmp_dir):
     class_to_colors = dict(sorted(class_to_colors.items(), key=lambda item: len(item[0])))
 
     labels = list(class_to_colors.keys())
-    print(labels)
     fig,ax = plt.subplots()
 
     def f(m, c,l):
-        print(m, c[0])
-        return plt.plot([],[],marker=m, color=c[0], ls="none", label=l)[0]
+        return plt.plot([],[],marker=m, color=c, ls="none", label=l)[0]
 
-    #handles = [f("s", np.array([color])/255., name) for name, color in class_to_colors.items()]
+    [f("s", class_color/255., class_name) for class_name, class_color in class_to_colors.items()]
 
     ax.axis('off')
     legend = plt.legend(ncol=5)
@@ -153,4 +151,4 @@ def get_legend(class_to_colors, tmp_dir):
     fig.canvas.draw()
     bbox  = legend.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
     fig.savefig(tmp_dir + "/legend.png", dpi="figure", bbox_inches=bbox)
-    return np.array(Image.open(tmp_dir + "/legend.png"))[:,:,:3].transpose(1, 0, 2)
+    return np.array(Image.open(tmp_dir + "/legend.png"))[:,:,:3].transpose(1, 0, 2)/255.

@@ -105,6 +105,6 @@ Where your data should be a directory with the following structure:
         image_0_poly.npy
         ...
     ...
-```
+``` 
 
 Following the example dataset from the [Zenodo archive](https://zenodo.org/record/TODO).
