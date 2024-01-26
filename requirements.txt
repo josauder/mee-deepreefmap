@@ -1,4 +1,3 @@
-gpmfstream @ git+https://github.com/hovren/gpmfstream.git@f1a9742de838ddb413fb490f8ac40d8c675b96e8
 matplotlib>=3.5.3
 numpy>=1.23.2
 open3d>=0.16.0

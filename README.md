@@ -7,7 +7,16 @@ This repository contais the source code for the Paper [Scalable 3D Semantic Mapp
 
 ## Installation
 
-Installing the required dependencies via pip:
+This repository depends on [gpmfstream](https://github.com/hovren/gpmfstream), which in turn depends on [gpmf-parser](https://github.com/gopro/gpmf-parser).
+To install gpmfstream, run the following:
+
+```git clone https://github.com/hovren/gpmfstream.git
+cd gpmfstream
+git submodule update --init
+python3 setup.py install
+```
+
+The reamining dependencies are installed via pip:
 
 ```pip install -r requirements.txt```
 
