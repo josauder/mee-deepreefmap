@@ -1,5 +1,5 @@
-CUDA_VISIBLE_DEVICES=0, python3 reconstruct.py \
---input_video=../../example_inputs/GX_TEST_SINGLE_VID.MP4 \
---timestamp=10-120 \
+python3 reconstruct.py \
+--input_video=../../example_data/input_videos/GX_SINGLE_VIDEO.MP4 \
+--timestamp=0-367 \
 --out_dir=../../out_test \
 --fps=10

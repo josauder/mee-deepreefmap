@@ -31,7 +31,6 @@ def extract_frames_and_gopro_gravity_vector(video_names, timestamps, width, heig
     for video_id, (video_name, timestamp) in enumerate(zip(video_names, timestamps)):
         
         targetpath = tmp_dir + "/" + video_name.split("/")[-1].split(".")[0].replace(" ", "_").replace("/", "_")
-        print(targetpath, video_name)
         os.makedirs(targetpath, exist_ok=True)
         
         begin, end = timestamp.split("-")
@@ -120,7 +119,6 @@ def render_video(img_list, depths, semantic_segmentation, results_npy, fps, clas
 
 
         if results_npy_rgb.shape[0]<results_npy_rgb.shape[1]:
-            print("axis0")
             results_npy_rgb = np.concatenate([results_npy_rgb,results_npy_class_rgb],axis=0)
         else:
             results_npy_rgb = np.concatenate([results_npy_rgb,results_npy_class_rgb],axis=1)

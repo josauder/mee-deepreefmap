@@ -10,7 +10,8 @@ This repository contais the source code for the Paper [Scalable 3D Semantic Mapp
 This repository depends on [gpmfstream](https://github.com/hovren/gpmfstream), which in turn depends on [gpmf-parser](https://github.com/gopro/gpmf-parser).
 To install gpmfstream, run the following:
 
-```git clone https://github.com/hovren/gpmfstream.git
+```
+git clone https://github.com/hovren/gpmfstream.git
 cd gpmfstream
 git submodule update --init
 python3 setup.py install
@@ -24,7 +25,8 @@ The reamining dependencies are installed via pip:
 
 Simple usage: the input is one MP4 video taken with a GoPro Hero 10 camera, as well as the timestamps on when the transect begins and ends in the video (TODO: discuss format).
 
-```python3 reconstruct.py \
+```
+python3 reconstruct.py \
     --input_video=<PATH_TO_VIDEO.MP4> \
     --timestamp=<START_TIMESTAMP>-<END_TIMESTAMP> \
     --out_dir=<OUTPUT_DIRECTORY>
@@ -32,7 +34,8 @@ Simple usage: the input is one MP4 video taken with a GoPro Hero 10 camera, as w
 
 Advanced usage: the GoPro Hero 10 camera cuts videos into 4GB chuns. If the transect is spread over two or more videos, the following command can be used to reconstruct the transect.
 
-```python3 reconstruct.py \
+```
+python3 reconstruct.py \
     --input_video=<PATH_TO_VIDEO_1.MP4>,<PATH_TO_VIDEO_2.MP4> \
     --timestamp=<START_TIMESTAMP_1>-end,begin-<END_TIMESTAMP_2> \
     --out_dir=<OUTPUT_DIRECTORY>
@@ -50,7 +53,8 @@ Pre-trained model checkpints and example input videos can be downloaded from the
 
 To train the 3D reconstruction data on your own data, use 
 
-```sfm/train_sfm.py 
+```
+sfm/train_sfm.py 
     --data <PATH_TO_DATA> \
     --checkpoint <PATH_TO_PRETRAINED_CHECKPOINT> \
     --name <NAME_OF_WANDB_EXPERIMENT>
@@ -58,7 +62,8 @@ To train the 3D reconstruction data on your own data, use
 
 Where your data should be a directory of the following structure (same as KITTI VO Dataset):
 
-```train.txt
+```
+train.txt
 val.txt
 sequence1/
     000001.jpg
@@ -76,19 +81,22 @@ sequence3/
 
 With `train.txt` containing, for example
 
-```sequence1
+```
+sequence1
 sequence2
 ```
 And `val.txt` containing, for example
 
-```sequence3
+```
+sequence3
 ```
 
 ## Training the Semantic Segmentation Network on Your Own Data
 
 For training the segmentation model, use
 
-```python3 train_segmentation.py \
+```
+python3 train_segmentation.py \
     --data <PATH_TO_DATA> \
     --checkpoint <PATH_TO_PRETRAINED_CHECKPOINT> \
     --test_splits <TEST_SCENE1>,<TEST_SCENE2> \
@@ -96,7 +104,8 @@ For training the segmentation model, use
 ```
 
 Where your data should be a directory with the following structure:
-```data/
+```
+data/
     classes.json
     colors.json
     counts.json
