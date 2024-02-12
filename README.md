@@ -21,6 +21,10 @@ The reamining dependencies are installed via pip:
 
 ```pip install -r requirements.txt```
 
+## Download Example Data and Pre-Trained Models:
+
+Pre-trained model checkpints and example input videos can be downloaded from the [Zenodo archive](https://zenodo.org/record/10624794).
+
 ## Running 3D Reconstructions of GoPro Hero 10 Videos
 
 Simple usage: the input is one MP4 video taken with a GoPro Hero 10 camera, as well as the timestamps on when the transect begins and ends in the video (TODO: discuss format).
@@ -44,10 +48,6 @@ python3 reconstruct.py \
 ## Running 3D Reconstructions of Videos from other Cameras
 
 This repository, for now, supports the GoPro Hero 10 Camera. If you want to use a different camera, be sure to provide the correct camera intrinsics as `intrinsics.json`, which are passed as a command line argument to any other scripts. For now, the intrinsics follow a simplified UCM format, with the focal lengths `fx, fy` in pixels, the focal point `cx, cy` in pixels, and the `alpha` value to account for distortion, which is set to zero in the default case to assume linear camera intrinsics.
-
-## Download Example Data and Pre-Trained Models:
-
-Pre-trained model checkpints and example input videos can be downloaded from the [Zenodo archive](https://zenodo.org/record/TODO).
 
 ## Training the 3D Reconstruction Network on Your Own Data
 
@@ -125,4 +125,4 @@ data/
     ...
 ``` 
 
-Following the example dataset from the [Zenodo archive](https://zenodo.org/record/TODO).
+Following the example dataset from the [Zenodo archive](https://zenodo.org/record/10624794).
