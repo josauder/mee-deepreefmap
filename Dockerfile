@@ -6,10 +6,10 @@ RUN pip install poetry pybind11
 
 WORKDIR /app
 
-
-# WORKDIR /app
 # # Get the gpmfstream library
-RUN apt-get update && apt-get install -y git wget unzip build-essential
+RUN apt-get update && \
+    apt-get install -y git wget unzip build-essential \
+    curl ffmpeg libsm6 libxext6
 RUN git clone https://github.com/hovren/gpmfstream.git
 WORKDIR /app/gpmfstream
 RUN git checkout ${GPMFSTREAM_GIT_HASH}
@@ -24,20 +24,18 @@ COPY poetry.lock pyproject.toml /app/
 WORKDIR /app
 # Install the dependencies
 RUN poetry install --no-root --no-dev
-RUN apt-get install -y curl
+RUN apt-get install -y
 
 # Download the example data and checkpoints
-RUN curl -f -L -o example_data.zip https://zenodo.org/records/10624794/files/example_data.zip?download=1
-RUN unzip example_data.zip
+RUN curl -f -L -o example_data.zip https://zenodo.org/records/10624794/files/example_data.zip?download=1 && unzip example_data.zip example_data/checkpoints/* && rm -rf example_data.zip
+#RUN unzip example_data.zip
 
 # Delete everything except checkpoints
-RUN rm -rf example_data.zip example_data/input_videos
-RUN apt-get install -y ffmpeg libsm6 libxext6
+#RUN rm -rf example_data.zip example_data/input_videos
 
 COPY src /app/src
 COPY example_inputs /app/example_inputs
 
 WORKDIR /app/src
 
-# ENTRYPOINT poetry run python3 reconstruct.py
-ENTRYPOINT poetry run python3 reconstruct.py --input_video=/input/GX_SINGLE_VIDEO.MP4 --timestamp=0-100 --out_dir=/output --fps=10
+ENTRYPOINT ["poetry", "run", "python3", "reconstruct.py"]
