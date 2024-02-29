@@ -5,6 +5,34 @@ This repository contais the source code for the Paper [Scalable 3D Semantic Mapp
 [The project page](https://josauder.github.io/deepreefmap/) contains updated information on the state of the project.
 
 
+## Quick start (docker)
+
+A Dockerfile is included that will obtain the necessary dependencies,
+pretrained model checkpoints and run the code.
+
+To build the docker image and run the code, use the following commands:
+
+```
+docker build -t deepreefmap .
+docker run \
+    -v ./example_data/input_videos:/input \
+    -v ./output:/output \
+    -v ./tmp:/tmp \
+    deepreefmap \
+    --input_video=/input/GX_SINGLE_VIDEO.MP4 \
+    --timestamp=0-100 \
+    --out_dir=/output \
+    --fps=10 \
+    --tmp_dir=/tmp
+
+```
+
+**Note**: The above command assumes that the input video is located in
+`./example_data/input_videos`, the output will be saved to `./output`. The
+input video can be obtained from the example data located in the Zenodo archive
+described below.
+
+
 ## Installation
 
 This repository depends on [gpmfstream](https://github.com/hovren/gpmfstream), which in turn depends on [gpmf-parser](https://github.com/gopro/gpmf-parser).
@@ -17,9 +45,15 @@ git submodule update --init
 python3 setup.py install
 ```
 
-The reamining dependencies are installed via pip:
+### Poetry (recommended)
 
-```pip install -r requirements.txt```
+This repository uses [Poetry](https://python-poetry.org/) to manage the rest
+of the dependencies. To install the dependencies, run the following in the main
+repository directory:
+
+```
+poetry install
+```
 
 ## Download Example Data and Pre-Trained Models:
 
@@ -51,10 +85,10 @@ This repository, for now, supports the GoPro Hero 10 Camera. If you want to use 
 
 ## Training the 3D Reconstruction Network on Your Own Data
 
-To train the 3D reconstruction data on your own data, use 
+To train the 3D reconstruction data on your own data, use
 
 ```
-sfm/train_sfm.py 
+sfm/train_sfm.py
     --data <PATH_TO_DATA> \
     --checkpoint <PATH_TO_PRETRAINED_CHECKPOINT> \
     --name <NAME_OF_WANDB_EXPERIMENT>
@@ -72,11 +106,11 @@ sequence1/
 sequence1/
     000001.jpg
     000002.jpg
-    ...    
+    ...
 sequence3/
     000001.jpg
     000002.jpg
-    ...    
+    ...
 ```
 
 With `train.txt` containing, for example
@@ -123,6 +157,6 @@ data/
         image_0_poly.npy
         ...
     ...
-``` 
+```
 
 Following the example dataset from the [Zenodo archive](https://zenodo.org/record/10624794).
