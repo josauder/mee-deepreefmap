@@ -122,6 +122,8 @@ def main(args):
     print("Finished Benthic Cover Analysis in ", time() - t, "seconds")
 
     os.system("cp "+args.tmp_dir+"/*_.mp4 "+ args.out_dir + "/videos")
+    os.system("cp "+args.class_to_color_file+" "+ args.out_dir)
+    
     render_video(img_list, depths, semantic_segmentation, results, args.fps, class_to_label, label_to_color, args.tmp_dir)
     os.system("mv " + args.tmp_dir + "/out.mp4 " + args.out_dir + "/videos")
     print("Rendered Video in ", time() - t, "seconds")
