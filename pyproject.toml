@@ -6,7 +6,7 @@ authors = ["Jonathan Sauder <josaudergh@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.12"
+python = "^3.10"
 pybind11 = "^2.11.1"
 gpmfstream = { path = "./gpmfstream" }
 matplotlib = ">=3.5.3"

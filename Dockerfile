@@ -14,26 +14,26 @@ RUN apt-get update && \
 
 RUN git clone https://github.com/hovren/gpmfstream.git
 WORKDIR /app/gpmfstream
-RUN git checkout ${GPMFSTREAM_GIT_HASH}
-RUN git submodule update --init
-RUN ls -la
-RUN python setup.py install
+RUN git checkout ${GPMFSTREAM_GIT_HASH} && git submodule update --init && python setup.py install
 
-# Copy the pyproject.toml and poetry.lock files to the container
-COPY poetry.lock pyproject.toml /app/
 WORKDIR /app
 
 # Download the example data and checkpoints
-RUN curl -f -L -o example_data.zip https://zenodo.org/records/10624794/files/example_data.zip?download=1 && unzip example_data.zip example_data/checkpoints/* && rm -rf example_data.zip
+RUN curl -f -L -o example_data.zip https://zenodo.org/records/10624794/files/example_data.zip?download=1 && \
+    unzip example_data.zip example_data/checkpoints/* && \
+    rm -rf example_data.zip
+
+# Copy the pyproject.toml and poetry.lock files to the container
+COPY poetry.lock pyproject.toml /app/
 
 # Change to non-root user
-RUN groupadd mygroup --gid 1000
-RUN useradd -m -U -s /bin/bash -G mygroup -u 1000 myuser
-RUN chown -R 1000:1000 /app
-RUN chmod -R 755 /app
-RUN mkdir /output /input
-RUN chown -R 1000:1000 /output /input
-RUN chmod -R o+w /input /output
+RUN groupadd mygroup --gid 1000 && \
+    useradd -m -U -s /bin/bash -G mygroup -u 1000 myuser && \
+    chown -R 1000:1000 /app && \
+    chmod -R 755 /app && \
+    mkdir /output /input && \
+    chown -R 1000:1000 /output /input && \
+    chmod -R o+w /input /output
 
 USER 1000
 
@@ -44,6 +44,5 @@ COPY src /app/src
 COPY example_inputs /app/example_inputs
 
 WORKDIR /app/src
-RUN ls -l /
 
 ENTRYPOINT ["poetry", "run", "python3", "reconstruct.py"]
