@@ -490,10 +490,11 @@ def norm_pixel_grid(grid, hw=None, in_place=False):
     return grid
 
 
-class UCMCamera(nn.Module):
+
+class EUCMCamera(nn.Module):
     """
     Differentiable camera class implementing reconstruction and projection
-    functions for the unified camera model (UCM).
+    functions for the extended unified camera model (EUCM).
     """
     def __init__(self, I, Tcw=None):
         """
@@ -501,7 +502,7 @@ class UCMCamera(nn.Module):
 
         Parameters
         ----------
-        I : torch.Tensor [5]
+        I : torch.Tensor [6]
             Camera intrinsics parameter vector
         Tcw : Pose
             Camera -> World pose transformation
@@ -527,8 +528,6 @@ class UCMCamera(nn.Module):
         self.Tcw = self.Tcw.to(*args, **kwargs)
         return self
 
-########################################################################################################################
-
     @property
     def fx(self):
         """Focal length in x"""
@@ -551,16 +550,19 @@ class UCMCamera(nn.Module):
 
     @property
     def alpha(self):
-        """alpha in UCM model"""
+        """alpha in EUCM model"""
         return self.I[:, 4].unsqueeze(1).unsqueeze(2)
+
+    @property
+    def beta(self):
+        """beta in EUCM model"""
+        return self.I[:, 5].unsqueeze(1).unsqueeze(2)
 
     @property
     @lru_cache()
     def Twc(self):
         """World -> Camera pose transformation (inverse of Tcw)"""
         return self.Tcw.inverse()
-
-########################################################################################################################
 
     def reconstruct(self, depth, frame='w'):
         """
@@ -587,7 +589,7 @@ class UCMCamera(nn.Module):
         grid = pixel_grid(depth, with_ones=True, device=depth.device)
 
         # Estimate the outward rays in the camera frame
-        fx, fy, cx, cy, alpha = self.fx, self.fy, self.cx, self.cy, self.alpha # [B,1,1]
+        fx, fy, cx, cy, alpha, beta = self.fx, self.fy, self.cx, self.cy, self.alpha, self.beta
 
         if torch.any(torch.isnan(alpha)):
             raise ValueError('alpha is nan')
@@ -595,21 +597,21 @@ class UCMCamera(nn.Module):
         u = grid[:,0,:,:]
         v = grid[:,1,:,:]
 
-        mx = (u - cx) / fx * (1 - alpha)
-        my = (v - cy) / fy * (1 - alpha)
+        mx = (u - cx) / fx
+        my = (v - cy) / fy
         r_square = mx ** 2 + my ** 2
-        xi = alpha / (1 - alpha) # [B, 1, 1]
-        coeff = (xi + torch.sqrt(1 + (1 - xi ** 2) * r_square)) / (1 + r_square) # [B, H, W]
+        mz = (1 - beta * alpha ** 2 * r_square) / (alpha * torch.sqrt(1 - (2 * alpha - 1) * beta * r_square) + (1 - alpha))
+        coeff = 1 / torch.sqrt(mx ** 2 + my ** 2 + mz ** 2)
         
         x = coeff * mx
         y = coeff * my
-        z = coeff * 1 - xi
+        z = coeff * mz
         z = z.clamp(min=1e-7)
-        
+
         x_norm = x / z
         y_norm = y / z
         z_norm = z / z
-        xnorm = torch.stack(( x_norm, y_norm, z_norm ), dim=1).float()
+        xnorm = torch.stack(( x_norm, y_norm, z_norm ), dim=1)
 
         # Scale rays to metric depth
         Xc = xnorm * depth
@@ -624,7 +626,7 @@ class UCMCamera(nn.Module):
         else:
             raise ValueError('Unknown reference frame {}'.format(frame))
 
-    def project(self, X, frame='w', return_z=True):
+    def project(self, X, frame='w'):
         """
         Projects 3D points onto the image plane
 
@@ -650,10 +652,10 @@ class UCMCamera(nn.Module):
             X = (self.Tcw * X.view(B,3,-1)).view(B,3,H,W)
         else:
             raise ValueError('Unknown reference frame {}'.format(frame))
-        
-        d = torch.norm(X, dim=1)
-        fx, fy, cx, cy, alpha = self.fx, self.fy, self.cx, self.cy, self.alpha
+
+        fx, fy, cx, cy, alpha, beta = self.fx, self.fy, self.cx, self.cy, self.alpha, self.beta
         x, y, z = X[:,0,:], X[:,1,:], X[:,2,:]
+        d = torch.sqrt( beta * ( x ** 2 + y ** 2 ) + z ** 2 )
         z = z.clamp(min=1e-7)
         
         Xnorm = fx * x / (alpha * d + (1 - alpha) * z + 1e-7) + cx
@@ -669,9 +671,7 @@ class UCMCamera(nn.Module):
         coords[invalid.unsqueeze(1).repeat(1, 2, 1, 1)] = -2
 
         # Return pixel coordinates
-        if return_z:
-            return coords.permute(0, 2, 3, 1), z
-        return coords.permute(0, 2, 3, 1)
+        return coords.permute(0, 2, 3, 1), z
 
     def reconstruct_depth_map(self, depth, to_world=True):
         if to_world:
@@ -679,19 +679,19 @@ class UCMCamera(nn.Module):
         else:
             return self.reconstruct(depth, frame='c')
 
-    def project_points(self, points, from_world=True, normalize=True, return_z=True):
+    def project_points(self, points, from_world=True, normalize=True, return_z=False):
         if from_world:
-            return self.project(points, return_z=return_z, frame='w')
+            return self.project(points, frame='w')
         else:
-            return self.project(points, return_z=return_z, frame='c')
+            return self.project(points, frame='c')
 
     def coords_from_depth(self, depth, ref_cam=None):
         if ref_cam is None:
             return self.project_points(self.reconstruct_depth_map(depth, to_world=False), from_world=True)
         else:
             return ref_cam.project_points(self.reconstruct_depth_map(depth, to_world=True), from_world=True)
-
         
+
 class Camera(nn.Module, ABC):
     """
     Camera class for 3D reconstruction
@@ -1389,45 +1389,10 @@ def cat_channel_ones(tensor, n=1):
                       device=tensor.device, dtype=tensor.dtype)], n)
 
 
-def inverse_warp_ucm(img, depth, ref_depth, pose, intrinsic_a, intrinsic_b, padding_mode):
-    cam1 = UCMCamera(intrinsic_b)
-    if pose.shape[-1] == 6:
-        cam0 = UCMCamera(intrinsic_a, Tcw = pose_vec2mat(-pose, mode='euler'))
-    else:
-        cam0 = UCMCamera(intrinsic_a, Tcw = torch.linalg.inv(pose))
-
-    coords, warped_depths = cam0.coords_from_depth(depth, cam1)
-    projected_img = torch.nn.functional.grid_sample(img, coords,
-        padding_mode=padding_mode, mode='bilinear', align_corners=False)
-    projected_mask = torch.nn.functional.grid_sample(torch.ones_like(depth), coords,
-        padding_mode=padding_mode, mode='bilinear', align_corners=False)
-    projected_depth = torch.nn.functional.grid_sample((ref_depth), coords,
-        padding_mode=padding_mode, mode='bilinear', align_corners=False)
-
-    return projected_img, projected_mask, projected_depth,  warped_depths
-
-
-def inverse_warp_ucm3(img, depth, ref_depth, pose, intrinsic, padding_mode):
-    cam1 = UCMCamera(intrinsic)
-    cam0 = UCMCamera(intrinsic, Tcw = -pose)
- 
-
-    coords, warped_depths = cam0.coords_from_depth(depth, cam1)
-    projected_img = torch.nn.functional.grid_sample(img, coords,
-        padding_mode=padding_mode, mode='bilinear', align_corners=False)
-    projected_mask = torch.nn.functional.grid_sample(torch.ones_like(depth), coords,
-        padding_mode=padding_mode, mode='bilinear', align_corners=False)
-    projected_depth = torch.nn.functional.grid_sample((ref_depth), coords,
-        padding_mode=padding_mode, mode='bilinear', align_corners=False)
-
-    return projected_img, projected_mask, projected_depth,  warped_depths
-
-
-
-def rectify(img, mask, depth, intrinsic):
+def rectify_eucm(img, mask, depth, intrinsic):
     
     with torch.no_grad():
-        cam1 = UCMCamera(intrinsic.unsqueeze(0))
+        cam1 = EUCMCamera(intrinsic.unsqueeze(0))
         linear_intrinsic = torch.tensor([[
                 [intrinsic[0], 0,  intrinsic[2]],
                 [0,  intrinsic[1],  intrinsic[3]],
@@ -1439,7 +1404,7 @@ def rectify(img, mask, depth, intrinsic):
         projected_img = torch.nn.functional.grid_sample(img, coords,
             padding_mode='zeros', mode='bilinear', align_corners=False)
         projected_mask = torch.nn.functional.grid_sample(mask, coords,
-            padding_mode='zeros', mode='nearest', align_corners=False)
+            padding_mode='zeros', mode='bilinear', align_corners=False)
         projected_depth = torch.nn.functional.grid_sample(depth, coords,
             padding_mode='zeros', mode='bilinear', align_corners=False)
-        return projected_img.squeeze().cpu().numpy(), projected_mask.squeeze().cpu().numpy(), projected_depth.squeeze().cpu().numpy()
+        return projected_img.squeeze().cpu().numpy(), (projected_mask==1).float().squeeze().cpu().numpy(), projected_depth.squeeze().cpu().numpy()

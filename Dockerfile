@@ -18,13 +18,13 @@ RUN git checkout ${GPMFSTREAM_GIT_HASH} && git submodule update --init && python
 
 WORKDIR /app
 
-# Download the example data and checkpoints
-RUN curl -f -L -o example_data.zip https://zenodo.org/records/10624794/files/example_data.zip?download=1 && \
-    unzip example_data.zip example_data/checkpoints/* && \
-    rm -rf example_data.zip
+# Copy the model checkpoints
+COPY segmentation_net.pth /app/
+COPY sfm_net.pth /app/
 
 # Copy the pyproject.toml and poetry.lock files to the container
 COPY poetry.lock pyproject.toml /app/
+
 
 # Change to non-root user
 RUN groupadd mygroup --gid 1000 && \
