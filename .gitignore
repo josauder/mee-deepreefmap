@@ -1,5 +1,4 @@
 # Pytorch 
-*.pth
 *.pt
 checkpoints/
 
