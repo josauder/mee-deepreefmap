@@ -23,10 +23,9 @@ RUN groupadd mygroup --gid 1000 && \
     chown -R 1000:1000 /app && \
     chmod -R 755 /app && \
     mkdir /output /input && \
-    chown -R 1000:1000 /output /input && \
+    chown -R 1000:1000 /output /input /tmp && \
     chmod -R o+w /input /output
 
-USER 1000
 
 # Build gpmfstream
 RUN git clone https://github.com/hovren/gpmfstream.git
@@ -38,12 +37,16 @@ RUN python3 setup.py bdist_wheel
 
 # Install dependencies
 WORKDIR /app
-RUN uv sync --no-dev --no-cache --extra build --extra compile
+RUN uv sync --no-dev --no-cache
 RUN uv pip install "./gpmfstream/dist/gpmfstream-0.5-cp310-cp310-linux_x86_64.whl"
 
 COPY src /app/src
 COPY example_inputs /app/example_inputs
 
 WORKDIR /app/src
+
+RUN chown -R 1000:1000 /app
+
+USER 1000
 
 ENTRYPOINT ["uv", "run", "python3", "reconstruct.py"]

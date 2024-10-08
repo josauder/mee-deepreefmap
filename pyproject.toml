@@ -1,20 +1,18 @@
 [project]
 name = "mee-deepreefmap"
-version = "0.1.0"
-description = "Add your description here"
+version = "1.0.0"
+description = "Scalable 3D Semantic Mapping of Coral Reefs using Deep Learning"
 readme = "README.md"
 requires-python = ">=3.10, <3.12"
-# authors = ["Jonathan Sauder <josaudergh@gmail.com>"]
+authors = ["Jonathan Sauder <josaudergh@gmail.com>"]
 dependencies = [
     "addict==2.4.0",
-    # "gpmfstream",
     "h5py==3.7.0",
     "matplotlib==3.5.3",
     "numpy==1.26.4",
     "open3d==0.16.0",
     "pandas==1.4.4",
     "pillow==9.1",
-    # "pybind11>=2.13.6",
     "scikit-image==0.24.0",
     "scikit-learn==1.5.2",
     "scipy==1.14.1",
@@ -22,21 +20,6 @@ dependencies = [
     "torch==2.0.1",
     "torchaudio==2.0.2",
     "torchvision==0.15.2",
-    # "setuptools>=75.1.0",
-    # "torch[cu118]==2.0.1",
-    # "torchaudio[cu118]==2.0.2",
-    # "torchvision[cu118]==0.15.2",
     "tqdm==4.64.1",
     "wandb==0.13.7",
 ]
-
-# [tool.uv.sources]
-# gpmfstream = { path = "gpmfstream" }
-
-# # [build-system]
-# [project.optional-dependencies]
-# build = ["setuptools>=75.1.0", "pybind11>=2.13.6"]
-# compile = ["setuptools>=75.1.0", "pybind11>=2.13.6", "gpmfstream"]
-
-# [tool.uv]
-# no-build-isolation-package = ["gpmfstream"]
