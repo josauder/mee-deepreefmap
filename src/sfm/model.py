@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import segmentation_models_pytorch as smp
+from .utils import get_depths_and_poses
+
 
 class SfMModel(nn.Module):
     def __init__(self,in_channels=3):

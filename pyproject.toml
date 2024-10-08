@@ -1,32 +1,39 @@
-[tool.poetry]
+[project]
 name = "mee-deepreefmap"
 version = "0.1.0"
-description = ""
-authors = ["Jonathan Sauder <josaudergh@gmail.com>"]
+description = "Add your description here"
 readme = "README.md"
-package-mode = false
+requires-python = ">=3.10, <3.12"
+# authors = ["Jonathan Sauder <josaudergh@gmail.com>"]
+dependencies = [
+    "addict==2.4.0",
+    # "gpmfstream",
+    "h5py==3.7.0",
+    "matplotlib==3.5.3",
+    "numpy==1.26.4",
+    "open3d==0.16.0",
+    "pandas==1.4.4",
+    "pillow==9.1",
+    # "pybind11>=2.13.6",
+    "scikit-image==0.24.0",
+    "scikit-learn==1.5.2",
+    "scipy==1.14.1",
+    "segmentation-models-pytorch==0.3.3",
+    # "setuptools>=75.1.0",
+    "torch[cu118]==2.0.1",
+    "torchaudio[cu118]==2.0.2",
+    "torchvision[cu118]==0.15.2",
+    "tqdm==4.64.1",
+    "wandb==0.13.7",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10, <3.12"
-pybind11 = "^2.11.1"
-gpmfstream = { path = "./gpmfstream" }
-matplotlib = ">=3.5.3"
-numpy = ">=1.26.4"
-h5py = ">=3.7.0"
-open3d = ">=0.16.0"
-pandas = ">=1.4.4"
-Pillow = ">=9.0.1"
-segmentation-models-pytorch = ">=0.3.3"
-scikit-learn = "==1.5.2"
-scikit-image = "==0.24.0"
-scipy = ">=1.9.1"
-torch = { version = ">=2.0.1", extras = ["cu118"] }
-torchaudio = { version = ">=2.0.2", extras = ["cu118"] }
-torchvision = { version = ">=0.15.2", extras = ["cu118"] }
-tqdm = ">=4.64.1"
-wandb = ">=0.13.7"
-addict = "^2.4.0"
+# [tool.uv.sources]
+# gpmfstream = { path = "gpmfstream" }
 
-[build-system]
-requires = ["poetry-core", "pybind11>=2.11.1"]
-build-backend = "poetry.core.masonry.api"
+# # [build-system]
+# [project.optional-dependencies]
+# build = ["setuptools>=75.1.0", "pybind11>=2.13.6"]
+# compile = ["setuptools>=75.1.0", "pybind11>=2.13.6", "gpmfstream"]
+
+# [tool.uv]
+# no-build-isolation-package = ["gpmfstream"]

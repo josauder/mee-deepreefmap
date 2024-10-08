@@ -148,56 +148,16 @@ def main(args):
     return 
 
 
-
 def reset_batchnorm_layers(model):
     for module in model.modules():
         if isinstance(module, (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)):
             module.eps = 1e-4
 
+
 def change_bn_momentum(model, new_value):
     for name, module in model.named_modules():
         if isinstance(module, nn.BatchNorm2d):
             module.momentum = new_value
-
-
-def get_depths_and_poses(encoder, segmentation_head, decoder, pose_decoder, images, features_, reduction, squeeze_unsqueeze):
-    b, l, c, h, w = images.shape
-
-    ref_features = [x[:b] for x in features_]
-
-    features = []
-    lf = len(features_)
-    _, c_feat, h_feat, w_feat = features_[-1].shape
-
-    for i in range(lf):
-        if i == lf - 1:
-            features.append(
-                features_[-1][b:] + squeeze_unsqueeze(torch.cat([
-                            features_[-1][b:], 
-                            ref_features[-1].reshape(b,1,c_feat,h_feat,w_feat).expand(b, l, c_feat, h_feat, w_feat).reshape(b*l,c_feat, h_feat, w_feat)
-                ], dim=1)))
-        else:
-            features.append(features_[i][b:])
-
-
-    depths = segmentation_head(decoder(*features)).reshape(b, l, 1, h, w) 
-    
-    _, c_feat, h_feat, w_feat = features[-1].shape
-    last_feat = features[-1]
-
-    last_feat = reduction(last_feat.reshape(b* l, c_feat, h_feat, w_feat))
-    c_feat = last_feat.shape[1]
-    last_feat = last_feat.reshape(b, l, c_feat, h_feat, w_feat)
-
-    
-    last_feat = last_feat.unsqueeze(2).expand(b, l, l, c_feat, h_feat, w_feat).contiguous()
-    features_sq = torch.cat([last_feat, last_feat.transpose(1, 2)], dim=3).reshape(b*l*l, c_feat*2, h_feat, w_feat)
-
-
-    poses = pose_decoder(features_sq)
-    poses = poses.mean(dim=(2,3)).reshape(b,l,l,6)
-
-    return depths, poses * 0.01
 
 
 def expand_zeros(mask):
