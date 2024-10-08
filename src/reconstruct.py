@@ -220,13 +220,13 @@ def get_nn_predictions(img_list, grav, num_classes, h5f, args):
     normalize = torchvision.transforms.Normalize(mean=[0.45, 0.45, 0.45],
                                                 std=[0.225, 0.225, 0.225])
     sfm_model = SfMModel().to(device)
-    sfm_model.load_state_dict(torch.load(args.sfm_checkpoint))
+    sfm_model.load_state_dict(torch.load(args.sfm_checkpoint, map_location=device))
     change_bn_momentum(sfm_model, 0.01)
     reset_batchnorm_layers(sfm_model)
     sfm_model.eval()
 
     segmentation_model = SegmentationModel(num_classes).to(device)
-    segmentation_model.load_state_dict(torch.load(args.segmentation_checkpoint))
+    segmentation_model.load_state_dict(torch.load(args.segmentation_checkpoint, map_location=device))
     segmentation_model.eval()
     
     intrinsics = torch.tensor(list(json.load(open(args.intrinsics_file)).values())).float().to(device).unsqueeze(0)
