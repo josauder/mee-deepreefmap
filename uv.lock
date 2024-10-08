@@ -689,9 +689,9 @@ requires-dist = [
     { name = "scikit-learn", specifier = "==1.5.2" },
     { name = "scipy", specifier = "==1.14.1" },
     { name = "segmentation-models-pytorch", specifier = "==0.3.3" },
-    { name = "torch", extras = ["cu118"], specifier = "==2.0.1" },
-    { name = "torchaudio", extras = ["cu118"], specifier = "==2.0.2" },
-    { name = "torchvision", extras = ["cu118"], specifier = "==0.15.2" },
+    { name = "torch", specifier = "==2.0.1" },
+    { name = "torchaudio", specifier = "==2.0.2" },
+    { name = "torchvision", specifier = "==0.15.2" },
     { name = "tqdm", specifier = "==4.64.1" },
     { name = "wandb", specifier = "==0.13.7" },
 ]
