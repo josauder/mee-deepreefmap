@@ -4,9 +4,10 @@ version = "0.1.0"
 description = ""
 authors = ["Jonathan Sauder <josaudergh@gmail.com>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.10, <3.12"
 pybind11 = "^2.11.1"
 gpmfstream = { path = "./gpmfstream" }
 matplotlib = ">=3.5.3"
@@ -16,8 +17,8 @@ open3d = ">=0.16.0"
 pandas = ">=1.4.4"
 Pillow = ">=9.0.1"
 segmentation-models-pytorch = ">=0.3.3"
-scikit-learn = "==1.1.2"
-scikit-image = "==0.19.3"
+scikit-learn = "==1.5.2"
+scikit-image = "==0.24.0"
 scipy = ">=1.9.1"
 torch = { version = ">=2.0.1", extras = ["cu118"] }
 torchaudio = { version = ">=2.0.2", extras = ["cu118"] }
@@ -27,5 +28,5 @@ wandb = ">=0.13.7"
 addict = "^2.4.0"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core", "pybind11>=2.11.1"]
 build-backend = "poetry.core.masonry.api"
