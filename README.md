@@ -7,24 +7,31 @@ This repository contais the source code for the Paper [Scalable 3D Semantic Mapp
 
 ## Quick start (docker)
 
-A Dockerfile is included that will obtain the necessary dependencies,
-pretrained model checkpoints and run the code.
+A docker image is available in this repository to run the code without
+installing any dependencies. 
 
-To build the docker image and run the code, use the following commands:
-
-```
-docker build -t deepreefmap .
+```bash
 docker run \
     -v ./example_data/input_videos:/input \
     -v ./output:/output \
-    -v ./tmp:/tmp \
-    deepreefmap \
+    ghcr.io/josauder/mee-deepreefmap \
     --input_video=/input/GX_SINGLE_VIDEO.MP4 \
     --timestamp=0-100 \
     --out_dir=/output \
-    --fps=10 \
-    --tmp_dir=/tmp
+    --fps=10
+```
 
+If using a GPU, make sure your docker runtime is configured to use the GPU
+(installing for example, `nvidia-container-toolkit` for NVIDIA GPUs), and run
+the docker image with the `--gpus all` flag.
+
+The Dockerfile used for building the above image is also included should
+you wish you build the image yourself.
+
+To build the docker image, use the following command:
+
+```bash
+docker build -t deepreefmap .
 ```
 
 **Note**: The above command assumes that the input video is located in
@@ -47,17 +54,22 @@ python3 setup.py install
 
 ### Poetry (recommended)
 
-This repository uses [Poetry](https://python-poetry.org/) to manage the rest
+This repository uses [uv](https://docs.astral.sh/uv/) to manage the rest
 of the dependencies. To install the dependencies, run the following in the main
 repository directory:
 
+```bash
+uv sync
 ```
-poetry install
-```
+
+For any doubt, refer to the `Dockefile` for the complete method of installing
+the dependencies.
 
 ## Download Example Data and Pre-Trained Models:
 
 Pre-trained model checkpints and example input videos can be downloaded from the [Zenodo archive](https://zenodo.org/record/10624794).
+
+Checkpoints are also included in this repository with Git-LFS. Ensure you have Git-LFS installed before cloning the repository.
 
 ## Running 3D Reconstructions of GoPro Hero 10 Videos
 

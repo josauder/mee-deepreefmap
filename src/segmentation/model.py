@@ -153,3 +153,7 @@ class BaselineExperiment:
         prediction = self.out_resize(prediction).squeeze()
         return prediction.numpy()
 
+
+def predict(model, image, num_classes, h, w):
+    prediction = model(image)
+    return F.resize(prediction, (h, w),interpolation=torchvision.transforms.InterpolationMode.BILINEAR).squeeze().cpu()
