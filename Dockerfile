@@ -12,11 +12,6 @@ RUN apt-get update && \
 # RUN pip3 install poetry
 WORKDIR /app
 
-# Copy the model checkpoints and environment
-COPY segmentation_net.pth /app/
-COPY sfm_net.pth /app/
-COPY uv.lock pyproject.toml /app/
-
 # Change to non-root user
 RUN groupadd mygroup --gid 1000 && \
     useradd -m -U -s /bin/bash -G mygroup -u 1000 myuser && \
@@ -26,6 +21,8 @@ RUN groupadd mygroup --gid 1000 && \
     chown -R 1000:1000 /output /input /tmp && \
     chmod -R o+w /input /output
 
+# Copy the model checkpoints and environment
+COPY --chown=1000:1000 segmentation_net.pth sfm_net.pth uv.lock pyproject.toml /app/
 
 # Build gpmfstream
 RUN git clone https://github.com/hovren/gpmfstream.git
@@ -40,13 +37,10 @@ WORKDIR /app
 RUN uv sync --no-dev --no-cache
 RUN uv pip install "./gpmfstream/dist/gpmfstream-0.5-cp310-cp310-linux_x86_64.whl"
 
-COPY src /app/src
-COPY example_inputs /app/example_inputs
+COPY --chown=1000:1000 src /app/src
+COPY --chown=1000:1000 example_inputs /app/example_inputs
 
 WORKDIR /app/src
-
-RUN chown -R 1000:1000 /app
-
 USER 1000
 
 ENTRYPOINT ["uv", "run", "python3", "reconstruct.py"]
