@@ -1,0 +1,153 @@
+[workspace]
+name = "mee-deepreefmap"
+version = "1.1.0"
+description = "Scalable 3D Semantic Mapping of Coral Reefs using Deep Learning"
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64"]
+
+# ---------------------------------------------------------------------------
+# Tasks – mirror the workflows described in README.md
+# ---------------------------------------------------------------------------
+
+[tasks.reconstruct]
+# Run a 3D reconstruction from a GoPro Hero 10 video.
+#   input_video : path to the MP4 file (comma-separated for multi-clip transects)
+#   timestamp   : begin-end marker, e.g. "0-100" or "0:23-end,begin-1:44"
+#   out_dir     : output directory (default: "out")
+#   fps         : frame extraction rate (default: 10 for the example data)
+args = [
+  "input_video",
+  "timestamp",
+  { arg = "out_dir", default = "out" },
+  { arg = "fps", default = "10" },
+]
+cmd = "python src/reconstruct.py --input_video={{ input_video }} --timestamp={{ timestamp }} --out_dir={{ out_dir }} --tmp_dir={{ out_dir }}/tmp --fps={{ fps }} --sfm_checkpoint=sfm_net.pth --segmentation_checkpoint=segmentation_net.pth --intrinsics_file=example_inputs/intrinsics_eucm.json --class_to_label_file=example_inputs/class_to_label.json --class_to_color_file=example_inputs/class_to_color.json"
+depends-on = ["_install"]
+env = { MPLCONFIGDIR = ".pixi/matplotlib", TORCH_HOME = ".pixi/torch", HF_HOME = ".pixi/huggingface" }
+inputs = [
+  "src/*.py",
+  "src/segmentation/*.py",
+  "src/sfm/*.py",
+  "example_inputs/*.json",
+  "sfm_net.pth",
+  "segmentation_net.pth",
+  "{{ input_video }}",
+]
+outputs = [
+  "{{ out_dir }}/class_to_color.json",
+  "{{ out_dir }}/percentage_covers.json",
+  "{{ out_dir }}/point_cloud_tsdf.csv",
+  "{{ out_dir }}/results.npy",
+]
+
+[tasks.download-example-data]
+# Download and extract the Zenodo example videos under example_data/.
+cmd = "python scripts/download_example_data.py"
+inputs = [
+  "scripts/download_example_data.py",
+]
+outputs = [
+  "example_data/input_videos/GX_SINGLE_VIDEO.MP4",
+  "example_data/input_videos/GX_VIDEO_1_OF_2.MP4",
+  "example_data/input_videos/GX_VIDEO_2_OF_2.MP4",
+]
+
+[tasks.train-sfm]
+# Train the SfM (depth-estimation) network on your own data.
+#   data : path to the dataset directory (KITTI VO layout with train.txt / val.txt)
+#   name : experiment name logged to Weights & Biases
+args = ["data", "name"]
+cmd = "python src/sfm/train_sfm.py --data={{ data }} --name={{ name }}"
+inputs = [
+  "src/sfm/*.py",
+  "{{ data }}/**/*",
+]
+outputs = [
+  "{{ name }}_best.pth",
+  "{{ name }}_last.pth",
+]
+
+[tasks.train-segmentation]
+# Train the semantic segmentation network on your own data.
+#   data : path to the dataset directory (classes.json, colors.json, scene folders)
+#   name : experiment name logged to Weights & Biases
+args = ["data", "name"]
+cmd = "python src/segmentation/train_segmentation_model.py --data={{ data }} --name={{ name }}"
+inputs = [
+  "src/segmentation/*.py",
+  "{{ data }}/**/*",
+]
+outputs = [
+  "{{ name }}.pth",
+]
+
+[tasks._install]
+# Fetch Git-LFS managed checkpoint files used by the reconstruction workflow.
+cmd = "git-lfs pull"
+inputs = [
+  ".gitattributes",
+]
+outputs = [
+  "sfm_net.pth",
+  "segmentation_net.pth",
+]
+
+# ---------------------------------------------------------------------------
+# Base (platform-independent) conda dependencies
+# ---------------------------------------------------------------------------
+[dependencies]
+python          = ">=3.10,<3.12"
+addict          = "*"
+h5py            = "*"
+matplotlib      = "*"
+numpy           = "*"
+open3d          = "*"
+pandas          = "*"
+pillow          = "*"
+pytorch         = "*"
+torchvision     = "*"
+scikit-image    = "*"
+scikit-learn    = "*"
+scipy           = "*"
+tqdm            = "*"
+wandb           = "*"
+ffmpeg          = "*"          # provides ffmpeg + ffprobe in PATH
+pybind11        = "*"          # required to build gpmfstream C extension
+setuptools      = "*"
+compilers       = "*"          # gcc (linux) / clang (mac) for C-extension builds
+pip             = "*"
+git             = "*"
+git-lfs         = "*"
+# Encoder/decoder library for semantic segmentation models.
+segmentation-models-pytorch = "*"
+
+# ---------------------------------------------------------------------------
+# PyPI-only dependencies (no conda-forge package available)
+# ---------------------------------------------------------------------------
+[pypi-options]
+no-build-isolation = true
+
+[pypi-dependencies]
+# Install this project's own packages (sfm, segmentation, video_utils, …)
+# editably so scripts can import them without path manipulation.
+mee-deepreefmap = { path = ".", editable = true }
+
+# GoPro Metadata Format stream parser (C extension; uses git submodules).
+# Pixi will clone the repo and initialise submodules automatically.
+# Pinned because the upstream repository does not publish versioned releases.
+gpmfstream = { git = "https://github.com/Tobias-Fischer/gpmfstream", rev = "ab23cfd06f65a04c3de835bba3747f6aefa6a40d" }
+
+[feature.cuda.target.linux-64.dependencies]
+pytorch-gpu = "*"
+
+[feature.cuda.system-requirements]
+cuda = "12"
+
+# ===========================================================================
+# Environments
+# ===========================================================================
+[environments]
+# Default: CPU on Linux, MPS-capable on macOS Apple Silicon.
+default = { solve-group = "default" }
+# GPU/CUDA: Linux only. Adds the conda-forge GPU selector package.
+cuda    = { features = ["cuda"], solve-group = "cuda" }

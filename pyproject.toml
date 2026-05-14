@@ -1,25 +1,34 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [project]
 name = "mee-deepreefmap"
 version = "1.1.0"
 description = "Scalable 3D Semantic Mapping of Coral Reefs using Deep Learning"
 readme = "README.md"
 requires-python = ">=3.10, <3.12"
-authors = ["Jonathan Sauder <josaudergh@gmail.com>"]
+authors = [{name = "Jonathan Sauder", email = "josaudergh@gmail.com"}]
 dependencies = [
-    "addict==2.4.0",
-    "h5py==3.7.0",
-    "matplotlib==3.5.3",
-    "numpy==1.26.4",
-    "open3d==0.16.0",
-    "pandas==1.4.4",
-    "pillow==9.1",
-    "scikit-image==0.24.0",
-    "scikit-learn==1.5.2",
-    "scipy==1.14.1",
-    "segmentation-models-pytorch==0.3.3",
-    "torch==2.0.1",
-    "torchaudio==2.0.2",
-    "torchvision==0.15.2",
-    "tqdm==4.64.1",
-    "wandb==0.13.7",
+    "addict>=2.4.0",
+    "h5py>=3.7.0",
+    "matplotlib>=3.5.3",
+    "numpy>=1.26.4",
+    "open3d>=0.16.0",
+    "pandas>=1.4.4",
+    "pillow>=9.1",
+    "scikit-image>=0.24.0",
+    "scikit-learn>=1.5.2",
+    "scipy>=1.14.1",
+    "segmentation-models-pytorch>=0.3.3",
+    "torch>=2.0.1",
+    "torchvision>=0.15.2",
+    "tqdm>=4.64.1",
+    "wandb>=0.13.7",
 ]

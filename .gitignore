@@ -3,6 +3,8 @@
 checkpoints/
 
 # Video processing
+example_data/
+out*/
 src/tmp
 tmp
 *.MP4

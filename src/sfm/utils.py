@@ -76,7 +76,8 @@ def get_depths_and_poses(encoder, segmentation_head, decoder, pose_decoder, imag
             features.append(features_[i][b:])
 
 
-    depths = segmentation_head(decoder(*features)).reshape(b, l, 1, h, w)
+    decoder_output = decoder(features)
+    depths = segmentation_head(decoder_output).reshape(b, l, 1, h, w)
 
     _, c_feat, h_feat, w_feat = features[-1].shape
     last_feat = features[-1]

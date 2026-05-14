@@ -1,0 +1,56 @@
+name: Validate pixi environment
+
+# Validate the default pixi environment on every push / PR.
+# Tests both supported platforms (linux-64 and osx-arm64).
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-default-environment:
+    name: Validate default environment on ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-64
+            os: ubuntu-latest
+          - platform: osx-arm64
+            os: macos-14
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install the default pixi environment
+        uses: prefix-dev/setup-pixi@v0.9.5
+        with:
+          pixi-version: latest
+          cache: false
+          environments: default
+
+      - name: List available pixi tasks
+        run: pixi task list
+
+      - name: Import project-specific third-party dependencies
+        run: |
+          pixi run python -c "
+          import gpmfstream
+          import open3d as o3d
+          import segmentation_models_pytorch as smp
+          print('Project-specific dependencies import OK')
+          "
+
+      - name: Import core project modules
+        run: |
+          pixi run python -c "
+          import video_utils
+          from sfm.model import SfMModel
+          from segmentation.model import SegmentationModel
+          print('Core project modules import OK')
+          "

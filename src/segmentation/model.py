@@ -12,7 +12,7 @@ import torchvision.transforms as transforms
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-SegmentationModel = lambda classes: smp.DeepLabV3Plus(encoder_name="resnext50_32x4d", classes=classes)
+SegmentationModel = lambda classes: smp.DeepLabV3Plus(encoder_name="resnext50_32x4d", encoder_weights=None, classes=classes)
 
 class SegmentationDataset(torch.utils.data.Dataset):
     def __init__(self, image_files, label_files, output_size, imagenet_normalization=False):

@@ -8,7 +8,7 @@ class SfMModel(nn.Module):
     def __init__(self,in_channels=3):
         super().__init__()
 
-        self.depth_net = smp.DeepLabV3Plus(in_channels=in_channels, encoder_name="resnext50_32x4d", encoder_weights='swsl', activation=None)
+        self.depth_net = smp.DeepLabV3Plus(in_channels=in_channels, encoder_name="resnext50_32x4d", encoder_weights=None, activation=None)
         self.pose_reduction = nn.Sequential(
             nn.Conv2d(2048, 512, (1, 1)), nn.ReLU(),  nn.BatchNorm2d(512),
         )
