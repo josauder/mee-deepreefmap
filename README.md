@@ -1,8 +1,14 @@
+# Deprecated
+
+**This repository is no longer maintained.** Development has moved to [eceo-epfl/deepreefmap](https://github.com/eceo-epfl/deepreefmap). Use that repository for current code, documentation, and releases.
+
+The instructions below describe the original release of [Scalable 3D Semantic Mapping of Coral Reefs using Deep Learning](https://arxiv.org/abs/2309.12804).
+
 # Scalable 3D Semantic Mapping of Coral Reefs using Deep Learning
 
-This repository contais the source code for the Paper [Scalable 3D Semantic Mapping of Coral Reefs using Deep Learning](https://arxiv.org/abs/2309.12804).
+This repository contains the source code for the paper [Scalable 3D Semantic Mapping of Coral Reefs using Deep Learning](https://arxiv.org/abs/2309.12804).
 
-[The project page](https://josauder.github.io/deepreefmap/) contains updated information on the state of the project.
+The maintained version of this project is [eceo-epfl/deepreefmap](https://github.com/eceo-epfl/deepreefmap).
 
 
 ## Quick start (docker)
